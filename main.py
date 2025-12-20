@@ -1,6 +1,6 @@
 import telebot
 import os
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, LabeledPrice
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 from flask import Flask
 from threading import Thread
 
@@ -9,62 +9,123 @@ BOT_TOKEN = '8025037882:AAGg047cDKMWDF_w4pUh3H5qFfSBChJIkFo'
 bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask('')
 
-# Функция для получения прямой ссылки GitHub
-def get_raw(url):
-    return url.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
+# Ссылка на твое стартовое фото (raw формат)
+START_IMG = "https://raw.githubusercontent.com/DypnouCon/prison-bot/main/starttext.jpeg"
 
-# Ссылки на картинки
-IMG = {
-    "main": get_raw("https://github.com/DypnouCon/prison-bot/blob/main/persten.png"),
-    "energy": get_raw("https://github.com/DypnouCon/prison-bot/blob/main/hidesicon.png"),
-    "finka": get_raw("https://github.com/DypnouCon/prison-bot/blob/main/knife.png"),
-    "samopal": get_raw("https://github.com/DypnouCon/prison-bot/blob/main/gunIcon.png"),
-    "bosses": get_raw("https://github.com/DypnouCon/prison-bot/blob/main/Avtoritet.png"),
-    "sklad": get_raw("https://github.com/DypnouCon/prison-bot/blob/main/sugar.png")
-}
-
-# ========== ТЕКСТЫ ГАЙДОВ ==========
+# ========== ПОДРОБНЫЕ ТЕКСТЫ ГАЙДОВ ==========
 TEXTS = {
     "start": (
-        "🏠 **Добро пожаловать в Prison Helper!**\n\n"
-        "Этот бот создан для помощи в игре «The Prison». Здесь собрана и постоянно дополняется "
-        "вся важная информация для облегчения поиска знаний об игровых механиках.\n\n"
-        "Выберите интересующий раздел ниже:"
+        "👋 **Добро пожаловать в Prison Helper!**\n\n"
+        "Этот бот создан как единая база знаний для игроков «The Prison». "
+        "Здесь собрана и постоянно актуализируется вся информация: от характеристик боссов до скрытых бонусов шмота.\n\n"
+        "Пользуйтесь меню ниже, чтобы найти нужный раздел. "
+        "Если у вас есть идеи по улучшению — жмите кнопку обратной связи!"
     ),
-    "sklad": "📦 **Склад**\n\nУпс... ты застал меня врасплох за активной работой. Скоро этот раздел будет заполнен рекомендациями!",
+    
     "energy": (
-        "📍 Энергия\n\n"
-        "База: 50. Таланты: Второе дыхание (+70), Адреналин (+40).\n\n"
-        "Одежда: Американец (+30), Дошик (+20), Пирожок (+10, Сева 7ур), Четки (+10, Ванька 10ур).\n\n"
-        "Заныканный шмот: Робин Гуд (+39), Лихие 90 (+20), Олимпиец (+12)."
+        "📍 **Главное меню » ⚡️ Энергия**\n\n"
+        "**Базовый запас:** 50 ед.\n\n"
+        "**📚 Таланты:**\n"
+        "• Второе дыхание: +70 ед.\n"
+        "• Адреналин: +40 ед.\n\n"
+        "**👕 Одежда и Мастера:**\n"
+        "• Комплект Американец (3 вещи из посылок): +30 ед.\n"
+        "• Комплект Дошик (посылка): +20 ед.\n"
+        "• Комплект Пирожок (Мастер Сева, 7 уровень): +10 ед.\n"
+        "• Комплект Четки (Мастер Ванька, 10 уровень): +10 ед.\n"
+        "• Сеты F1, Монетница, Радио: по +10 ед.\n\n"
+        "**🗄 Заныканный шмот и Сеты:**\n"
+        "• Сет Робин Гуд (покупается у барыги, за все слоты): +39 ед.\n"
+        "• Сет Лихие 90 (Слепой кольщик): +20 ед.\n"
+        "• Сет Оборотень (Слепой кольщик): +15 ед.\n"
+        "• Комплект Олимпиец: +12 ед."
     ),
-    "finka_main": "📍 Финка\n\nВыберите категорию для прокачки урона:",
-    "finka_tats": "📍 Финка » Наколки\n\nКости (+225): Кресты.\nМетки Судьбы (+180): Комбо Шайба.\nПленник (+180): Дядя Миша.\nЗверинец (+80): Магазин.",
-    "finka_wear": "📍 Финка » Шмотки\n\nГаннибал (+180): Хирург Авто.\nОпасный (+150): Хирург Пац.\nЯкудза (+40): Бурят Блат.\nАрмани (+35): Угольки.",
+
+    "finka_main": (
+        "📍 **Главное меню » 🗡 Финка**\n\n"
+        "Здесь собраны все способы увеличить ваш урон финкой. "
+        "Выберите интересующую категорию:"
+    ),
+
+    "finka_tats": (
+        "📍 **Финка » ✍️ Наколки**\n\n"
+        "**🦴 Комплект Кости (+225 урон):**\n"
+        "Добывается в тюрьме «Кресты». Верхняя часть падает в дневных движухах, нижняя — в ночных.\n\n"
+        "**👁 Метки Судьбы (+180 урон):**\n"
+        "Выпадает при победе в комбо-бою с Авторитетным Шайбой.\n\n"
+        "**⛓ Комплект Пленник (+180 урон):**\n"
+        "Выпадает при победе над Пацанским Дядей Мишей.\n\n"
+        "**🐯 Комплект Зверинец (+80 урон):**\n"
+        "Полный сет из 10 наколок. Покупается в магазине за игровую валюту.\n\n"
+        "**👸 Принцесса (+80 урон):**\n"
+        "Можно выиграть в мини-игре «Катала».\n\n"
+        "**🎭 Мафиози (+80 урон):**\n"
+        "Редкий сет у Слепого Кольщика."
+    ),
+
+    "finka_wear": (
+        "📍 **Финка » 👕 Шмотки и Экипировка**\n\n"
+        "**👺 Сет Ганнибал (+180 урон):**\n"
+        "Сет одежды. Выпадает с босса Авторитетный Хирург.\n\n"
+        "**🔪 Сет Опасный (+150 урон):**\n"
+        "Сет одежды. Выпадает с босса Пацанский Хирург.\n\n"
+        "**🇯🇵 Сет Якудза (+40 урон):**\n"
+        "Сет одежды. Выпадает с босса Блатной Бурят.\n\n"
+        "**📦 Запрещенные посылки:**\n"
+        "• Швейцарский ножик (в руку): +20 урон.\n"
+        "• Майка (на тело): +30 урон.\n"
+        "• Крюк (в руку): +10 урон.\n\n"
+        "**🏙 Тюремные движухи (одежда):**\n"
+        "• Армани: +35 (локация Угольки).\n"
+        "• Кельвин Кляйн: +30 (локация Кресты).\n"
+        "• D&G: +25 (локация Лефортовка).\n"
+        "• Гучи / Гермес: по +20."
+    ),
+
     "samopal": (
-        "📍 Самопал\n\n"
-        "Боссы: Дюбель (+300), Д.Миша (+210), Шайба (+160).\n"
-        "Азарт: Покер (+400), Катала (+90), Колесо (+50).\n"
-        "Мастера: Янка (+80), Кеша (+40), Сет Тлен (+90)."
+        "📍 **Главное меню » 🔫 Самопал**\n\n"
+        "**⛔️ Боссы (урон в сет):**\n"
+        "• Дюбель (Авто): +300\n"
+        "• Дядя Миша (Блат): +210\n"
+        "• Шайба (Авто): +160\n\n"
+        "**🎰 Азартные игры:**\n"
+        "• Покер (Сет Дьявольская удача, 42 шт): +400\n"
+        "• Катала (Сет Падший Ангел, 34 шт): +90\n"
+        "• Колесо фортуны (Сеты Жмурки + Знаток): +100\n\n"
+        "**🛠 Мастера:**\n"
+        "• Янка (Сет Обряд, 38 шт): +80\n"
+        "• Кеша (Сет Толстосум, 4 шт): +40\n"
+        "• Сет Тлен (+90): сборный бонус за прокачку всех мастеров (Яша, Ашот, Жора и др.)."
     ),
+
+    "bosses_main": "📍 **Главное меню » 👊 Боссы**\n\nВыберите категорию для просмотра ХП:",
+
     "bosses_bespredel": (
-        "📍 Боссы » Беспредельщики\n\n"
-        "Шайба: 50к / 150к / 300к\n"
-        "Дядя Миша: 3м / 9м / 18м\n"
-        "Хирург: 30м / 90м / 180м\n"
-        "Тротил: 200м / 600м / 1.2б / 2.4б"
+        "📍 **Боссы » Беспредельщики**\n\n"
+        "**Шайба:**\n"
+        "Пацанский: 50к | Блатной: 150к | Авто: 300к\n\n"
+        "**Дядя Миша:**\n"
+        "Пацанский: 3м | Блатной: 9м | Авто: 18м\n\n"
+        "**Хирург:**\n"
+        "Пацанский: 30м | Блатной: 90м | Авто: 180м\n\n"
+        "**Тротил:**\n"
+        "Пацанский: 200м | Блатной: 600м | Авто: 1.2б | Воровской: 2.4б"
     ),
+
     "bosses_vertuhai": (
-        "📍 Боссы » Вертухаи\n\n"
-        "Палыч: 100к\n"
-        "Близнецы: 2м\n"
-        "Борзов: 3м / 9м / 18м\n"
-        "Дюбель: 40м / 120м / 240м\n"
-        "Гром: 70м / 210м / 420м / 840м"
+        "📍 **Боссы » Вертухаи**\n\n"
+        "**Палыч:** 100 000\n"
+        "**Близнецы:** 2 000 000\n\n"
+        "**Борзов:**\n"
+        "Пацанский: 3м | Блатной: 9м | Авто: 18м\n\n"
+        "**Дюбель:**\n"
+        "Пацанский: 40м | Блатной: 120м | Авто: 240м\n\n"
+        "**Гром:**\n"
+        "Пац: 70м | Блат: 210м | Авто: 420м | Вор: 840м"
     )
 }
 
-# ========== КЛАВИАТУРЫ ==========
+# ========== КЛАВИАТУРЫ (ИНЛАЙН) ==========
 def get_main_kb():
     kb = InlineKeyboardMarkup(row_width=2)
     kb.add(
@@ -73,9 +134,18 @@ def get_main_kb():
         InlineKeyboardButton("🔫 Самопал", callback_data="samopal"),
         InlineKeyboardButton("👊 Боссы", callback_data="bosses"),
         InlineKeyboardButton("📦 Склад", callback_data="sklad"),
-        InlineKeyboardButton("💎 Донат", callback_data="thanks")
+        InlineKeyboardButton("💎 Благодарность", callback_data="thanks")
     )
-    kb.row(InlineKeyboardButton("💬 Обратная связь", url="https://t.me/gbg_georg"))
+    kb.row(InlineKeyboardButton("💬 Обратная связь / Идеи", url="https://t.me/gbg_georg"))
+    return kb
+
+def get_finka_kb():
+    kb = InlineKeyboardMarkup(row_width=1)
+    kb.add(
+        InlineKeyboardButton("✍️ Наколки", callback_data="f_tats"),
+        InlineKeyboardButton("👕 Шмотки", callback_data="f_wear"),
+        InlineKeyboardButton("⬅️ Назад", callback_data="to_main")
+    )
     return kb
 
 def get_bosses_kb():
@@ -87,55 +157,64 @@ def get_bosses_kb():
     )
     return kb
 
-def get_back_kb(target):
-    return InlineKeyboardMarkup().add(InlineKeyboardButton("⬅️ Назад", callback_data=target))
-
 # ========== ОБРАБОТЧИКИ ==========
-def send_update(call, text, img_key, keyboard):
-    bot.delete_message(call.message.chat.id, call.message.message_id)
-    bot.send_photo(call.message.chat.id, IMG[img_key], caption=text, reply_markup=keyboard, parse_mode="Markdown")
-
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_photo(message.chat.id, IMG["main"], caption=TEXTS["start"], reply_markup=get_main_kb(), parse_mode="Markdown")
+    bot.send_message(message.chat.id, "Загрузка...", reply_markup=ReplyKeyboardRemove())
+    bot.send_photo(
+        message.chat.id, 
+        START_IMG, 
+        caption=TEXTS["start"], 
+        reply_markup=get_main_kb(), 
+        parse_mode="Markdown"
+    )
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
-    if call.data == "to_main":
-        send_update(call, TEXTS["start"], "main", get_main_kb())
-    elif call.data == "energy":
-        send_update(call, TEXTS["energy"], "energy", get_back_kb("to_main"))
-    elif call.data == "finka":
-        send_update(call, TEXTS["finka_main"], "finka", InlineKeyboardMarkup().add(
-            InlineKeyboardButton("✍️ Наколки", callback_data="f_tats"),
-            InlineKeyboardButton("👕 Шмотки", callback_data="f_wear"),
-            InlineKeyboardButton("⬅️ Назад", callback_data="to_main")
-        ))
-    elif call.data == "f_tats":
-        send_update(call, TEXTS["finka_tats"], "finka", get_back_kb("finka"))
-    elif call.data == "f_wear":
-        send_update(call, TEXTS["finka_wear"], "finka", get_back_kb("finka"))
-    elif call.data == "samopal":
-        send_update(call, TEXTS["samopal"], "samopal", get_back_kb("to_main"))
-    elif call.data == "bosses":
-        send_update(call, "📍 Выберите категорию боссов:", "bosses", get_bosses_kb())
-    elif call.data == "b_bespredel":
-        send_update(call, TEXTS["bosses_bespredel"], "bosses", get_back_kb("bosses"))
-    elif call.data == "b_vertuhai":
-        send_update(call, TEXTS["bosses_vertuhai"], "bosses", get_back_kb("bosses"))
-    elif call.data == "sklad":
-        send_update(call, TEXTS["sklad"], "sklad", get_back_kb("to_main"))
-    elif call.data == "thanks":
-        bot.answer_callback_query(call.id, "Раздел благодарности обновляется")
+    # Теперь мы редактируем только ТЕКСТ, картинка из старта остается сверху или уходит
+    cid = call.message.chat.id
+    mid = call.message.message_id
+
+    try:
+        if call.data == "to_main":
+            bot.edit_message_caption(TEXTS["start"], cid, mid, reply_markup=get_main_kb(), parse_mode="Markdown")
+        
+        elif call.data == "energy":
+            bot.edit_message_caption(TEXTS["energy"], cid, mid, reply_markup=InlineKeyboardMarkup().add(InlineKeyboardButton("⬅️ Назад", callback_data="to_main")), parse_mode="Markdown")
+            
+        elif call.data == "finka":
+            bot.edit_message_caption(TEXTS["finka_main"], cid, mid, reply_markup=get_finka_kb(), parse_mode="Markdown")
+            
+        elif call.data == "f_tats":
+            bot.edit_message_caption(TEXTS["finka_tats"], cid, mid, reply_markup=InlineKeyboardMarkup().add(InlineKeyboardButton("⬅️ Назад", callback_data="finka")), parse_mode="Markdown")
+            
+        elif call.data == "f_wear":
+            bot.edit_message_caption(TEXTS["finka_wear"], cid, mid, reply_markup=InlineKeyboardMarkup().add(InlineKeyboardButton("⬅️ Назад", callback_data="finka")), parse_mode="Markdown")
+            
+        elif call.data == "samopal":
+            bot.edit_message_caption(TEXTS["samopal"], cid, mid, reply_markup=InlineKeyboardMarkup().add(InlineKeyboardButton("⬅️ Назад", callback_data="to_main")), parse_mode="Markdown")
+            
+        elif call.data == "bosses":
+            bot.edit_message_caption(TEXTS["bosses_main"], cid, mid, reply_markup=get_bosses_kb(), parse_mode="Markdown")
+            
+        elif call.data == "b_bespredel":
+            bot.edit_message_caption(TEXTS["bosses_bespredel"], cid, mid, reply_markup=InlineKeyboardMarkup().add(InlineKeyboardButton("⬅️ Назад", callback_data="bosses")), parse_mode="Markdown")
+            
+        elif call.data == "b_vertuhai":
+            bot.edit_message_caption(TEXTS["bosses_vertuhai"], cid, mid, reply_markup=InlineKeyboardMarkup().add(InlineKeyboardButton("⬅️ Назад", callback_data="bosses")), parse_mode="Markdown")
+
+        elif call.data == "sklad":
+            bot.edit_message_caption("📦 **Склад**\n\nУпс... ты застал меня врасплох за активной работой. Скоро этот раздел будет заполнен рекомендациями!", cid, mid, reply_markup=InlineKeyboardMarkup().add(InlineKeyboardButton("⬅️ Назад", callback_data="to_main")), parse_mode="Markdown")
+
+    except Exception:
+        # Если вдруг сообщение нельзя отредактировать (например, оно было без картинки)
+        bot.send_message(cid, "Воспользуйтесь меню:", reply_markup=get_main_kb())
 
 # ========== ЗАПУСК ==========
 @app.route('/')
 def home(): return "OK"
 
-def run():
-    bot.delete_webhook(drop_pending_updates=True)
-    bot.polling(none_stop=True)
-
 if __name__ == '__main__':
     Thread(target=lambda: app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8080)))).start()
-    run()
+    bot.delete_webhook(drop_pending_updates=True)
+    bot.polling(none_stop=True)
