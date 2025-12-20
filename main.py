@@ -226,5 +226,8 @@ def run():
     bot.polling(none_stop=True)
 
 if __name__ == '__main__':
+    # Эта строчка скажет Телеграму: "Забудь про старые запросы, я новый хозяин"
+    bot.delete_webhook(drop_pending_updates=True) 
+    
     Thread(target=lambda: app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8080)))).start()
-    run()
+    bot.polling(none_stop=True)
